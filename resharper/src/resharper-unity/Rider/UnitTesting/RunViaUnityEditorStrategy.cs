@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using JetBrains.Application.Threading;
 using JetBrains.DataFlow;
 using JetBrains.Metadata.Access;
-using JetBrains.Metadata.Reader.API;
 using JetBrains.Platform.Unity.EditorPluginModel;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.TaskRunnerFramework;
@@ -16,10 +15,7 @@ using JetBrains.ReSharper.UnitTestFramework.Strategy;
 using JetBrains.ReSharper.UnitTestProvider.nUnit.v30;
 using JetBrains.ReSharper.UnitTestProvider.nUnit.v30.Elements;
 using JetBrains.Util;
-
-#if RIDER
 using JetBrains.Util.Dotnet.TargetFrameworkIds;
-#endif
 using UnitTestLaunch = JetBrains.Platform.Unity.EditorPluginModel.UnitTestLaunch;
 
 namespace JetBrains.ReSharper.Plugins.Unity.Rider.UnitTesting
@@ -81,6 +77,19 @@ namespace JetBrains.ReSharper.Plugins.Unity.Rider.UnitTesting
             {
                 return Task.FromResult(false);
             }
+
+            var hostId = run.HostController.HostId;
+            if (hostId == WellKnownHostProvidersIds.DebugProviderId)
+            {
+                run.Launch.Output.Error("Starting Unity tests from 'Debug' is currently unsupported. Please attach to editor and use 'Run'.");
+                return Task.FromResult(false);
+            }
+            
+            if (hostId != WellKnownHostProvidersIds.RunProviderId)
+            {
+                run.Launch.Output.Error($"Starting Unity tests from '{hostId}' is currently unsupported. Please use `Run`.");
+                return Task.FromResult(false);
+            }
             
             var tcs = new TaskCompletionSource<bool>();
             run.Launch.PutData(ourLaunchedInUnityKey, "smth");
@@ -120,8 +129,8 @@ namespace JetBrains.ReSharper.Plugins.Unity.Rider.UnitTesting
                 if (unitTestElement == null) //https://youtrack.jetbrains.com/issue/RIDER-15849
                 {
                     var name = result.ParentId.Substring(result.ParentId.LastIndexOf(".", StringComparison.Ordinal) + 1);
-                    var brakets = result.TestId.Substring(result.ParentId.Length);
-                    var newID = result.ParentId+"."+name+brakets;
+                    var brackets = result.TestId.Substring(result.ParentId.Length);
+                    var newID = result.ParentId+"."+name+brackets;
                     unitTestElement = GetElementById(newID);
                 }
                 if (unitTestElement == null)

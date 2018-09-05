@@ -1,3 +1,0 @@
-﻿(method) void A.OnDestroy()
-
-This function is called when the MonoBehaviour will be destroyed.

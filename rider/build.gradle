@@ -4,13 +4,8 @@ buildscript {
     ext.rd_version = '0.1.18'
 
     repositories {
-        if (System.env['TEAMCITY_VERSION'] != null) {
-            maven { url 'https://repo.labs.intellij.net/rd-snapshots-maven' }
-        }
-        else {
-            maven { url 'https://www.myget.org/F/rd-snapshots/maven/' }
-        }
-        mavenCentral()
+        maven { url "https://cache-redirector.jetbrains.com/myget.org.rd-snapshots.maven" }
+        maven { url "https://cache-redirector.jetbrains.com/maven-central" }
     }
 
     dependencies {
@@ -22,8 +17,21 @@ plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.2.41'
     id 'org.jetbrains.intellij' version '0.3.2'
+    id 'com.ullink.nunit' version '1.12' 
 }
 
+configurations {
+    reSharper
+}
+
+repositories {
+    maven { url "https://cache-redirector.jetbrains.com/intellij-repository/snapshots" }
+    maven { url "https://cache-redirector.jetbrains.com/maven-central" }
+}
+
+dependencies {
+    reSharper group: "com.jetbrains.intellij.resharper", name: "resharperUltimatePackages", version: "2018.2-SNAPSHOT", ext: "zip"
+}
 
 apply plugin: 'com.jetbrains.rdgen'
 
@@ -31,10 +39,11 @@ ext.RdGen = com.jetbrains.rider.generator.gradle.RdgenTask
 
 ext.repoRoot = new File("..").canonicalFile
 ext.isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
-
+ext.dependenciesDir = new File("dependencies")
 
 wrapper {
-    distributionType = Wrapper.DistributionType.ALL
+    gradleVersion = '4.7'
+    distributionUrl = "https://cache-redirector.jetbrains.com/services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
 if (System.env['TEAMCITY_VERSION'] != null) {
@@ -50,12 +59,6 @@ if (System.env['TEAMCITY_VERSION'] != null) {
     ext.isBuildingUnderCi = false
 }
 
-// Renaming to be more meaningful, but would also require updating build.ps1
-// and also the build configuration settings in TeamCity
-if (!ext.has("Source"))
-    ext.Source = new File(ext.repoRoot, "rider/build/riderRD-2018.2-SNAPSHOT/lib/ReSharperHostSdk")    
-ext.PackageSource = ext.Source
-
 if (!ext.has("BuildCounter"))
     ext.BuildCounter = 9999
 
@@ -65,6 +68,11 @@ if (!ext.has("BuildConfiguration")) {
 
 if (!ext.has('dotNetUpToDate') || ext.dotNetUpToDate ==~ "(?i)False")
     ext.dotNetUpToDate = false
+
+/* done as an optional step so that we can reuse the build artifacts */
+if (!ext.has("RunTests") || ext.RunTests ==~ "(?i)False")
+    ext.RunTests = false
+logger.lifecycle("RunTests=$RunTests")
 
 ext.shouldBuildRiderOnly = false
 

@@ -9,41 +9,44 @@ import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.JDOMExternalizerUtil
-import com.jetbrains.rider.UnityReferenceDiscoverer
 import com.jetbrains.rider.icons.ReSharperSolutionAnalysisIcons
+import com.jetbrains.rider.isUnityGeneratedProject
 import com.jetbrains.rider.plugins.unity.util.UnityIcons
 import com.jetbrains.rider.projectView.nodes.IProjectModelNode
 import com.jetbrains.rider.projectView.views.SolutionViewPaneBase
 import com.jetbrains.rider.projectView.views.impl.SolutionViewSelectInTargetBase
 import org.jdom.Element
 
-class UnityExplorer(project: Project) : SolutionViewPaneBase(project, UnityExplorerRootNode(project)) {
+class UnityExplorer(project: Project) : SolutionViewPaneBase(project, UnityExplorerRootNode(project, PackagesManager.getInstance(project))) {
 
     companion object {
         const val ID = "UnityExplorer"
         const val Title = "Unity"
         const val Weight = 1
         const val ShowHiddenItemsOption = "show-hidden-items"
-        val Icon = UnityIcons.Toolwindows.ToolWindowUnityLog
-
         const val DefaultProjectPrefix = "Assembly-CSharp"
-        val IgnoredExtensions = hashSetOf("meta", "tmp")
 
+        val Icon = UnityIcons.Toolwindows.ToolWindowUnityLog
+        val IgnoredExtensions = hashSetOf("meta", "tmp")
         val SELECTED_REFERENCE_KEY: DataKey<UnityExplorerNode.ReferenceItem> = DataKey.create("selectedReference")
 
-        fun getInstance(project: Project): UnityExplorer {
-            return tryGetInstance(project)!!
-        }
+        fun getInstance(project: Project) = tryGetInstance(project)!!
+
         fun tryGetInstance(project: Project): UnityExplorer? {
             return ProjectView.getInstance(project).getProjectViewPaneById(ID) as? UnityExplorer
         }
     }
 
+    private val packagesViewUpdater = UnityExplorerPackagesViewUpdater(project, this, PackagesManager.getInstance(project))
+
     var myShowHiddenItems = false
 
-    override fun isInitiallyVisible(): Boolean {
-        return UnityReferenceDiscoverer.hasAssetsFolder(project)
+    override fun dispose() {
+        packagesViewUpdater.dispose()
+        super.dispose()
     }
+
+    override fun isInitiallyVisible() = project.isUnityGeneratedProject()
 
     override fun getData(dataId: String?): Any? {
         return when {
@@ -73,9 +76,15 @@ class UnityExplorer(project: Project) : SolutionViewPaneBase(project, UnityExplo
     override fun getWeight() = Weight
 
     override fun createSelectInTarget() =  object : SolutionViewSelectInTargetBase(project) {
+
+        // We have to return true here, because a file might be from a local package, which could be almost anywhere on
+        // the filesystem
+        override fun canSelect(context: SelectInContext) = true
+
         override fun selectIn(context: SelectInContext?, requestFocus: Boolean) {
             context?.let { select(it, null, requestFocus) }
         }
+
         override fun toString() = Title
         override fun getMinorViewId() = ID
         override fun getWeight() = Weight.toFloat()
@@ -86,16 +95,6 @@ class UnityExplorer(project: Project) : SolutionViewPaneBase(project, UnityExplo
         actionGroup.addSeparator()
         super.addPrimaryToolbarActions(actionGroup)
     }
-
-//    override fun getStripe(data: Any?, expanded: Boolean): ErrorStripe? {
-//        if (expanded) {
-//            val node = data as? UnityExplorerNode
-//            if (node != null && !node.hasProblemFileBeneath()) {
-//                return null
-//            }
-//        }
-//        return super.getStripe(data, expanded)
-//    }
 
     private inner class ShowHiddenItemsAction
         : ToggleAction("Show Hidden Files", null, ReSharperSolutionAnalysisIcons.UnignoreErrors), DumbAware {

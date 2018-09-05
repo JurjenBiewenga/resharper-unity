@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using JetBrains.DataFlow;
 using JetBrains.Util;
+using JetBrains.Util.Logging;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,18 +15,31 @@ namespace JetBrains.Rider.Unity.Editor
     string RiderPath { get; set; }
   }
 
+  public enum AssemblyReloadSettings
+  {
+    RecompileAndContinuePlaying = 0,
+    RecompileAfterFinishedPlaying = 1,
+    StopPlayingAndRecompile = 2
+  }
+
   public class PluginSettings : IPluginSettings
   {
-    private static LoggingLevel ourSelectedLoggingLevel = (LoggingLevel) EditorPrefs.GetInt("Rider_SelectedLoggingLevel", 4);
-
     internal static LoggingLevel SelectedLoggingLevel
     {
-      get => ourSelectedLoggingLevel;
+      get => (LoggingLevel) EditorPrefs.GetInt("Rider_SelectedLoggingLevel", 0);
       private set
       {
         EditorPrefs.SetInt("Rider_SelectedLoggingLevel", (int) value);
-        ourSelectedLoggingLevel = value;
+        InitLog();
       }
+    }
+
+    public static void InitLog()
+    {
+      if (SelectedLoggingLevel > LoggingLevel.OFF) 
+        Log.DefaultFactory = Log.CreateFileLogFactory(EternalLifetime.Instance, PluginEntryPoint.LogPath, true, SelectedLoggingLevel);
+      else
+        Log.DefaultFactory = new SingletonLogFactory(NullLog.Instance); // use profiler in Unity - this is faster than leaving TextWriterLogFactory with LoggingLevel OFF 
     }
 
     public static string[] GetInstalledNetFrameworks()
@@ -32,7 +47,12 @@ namespace JetBrains.Rider.Unity.Editor
       if (SystemInfoRiderPlugin.operatingSystemFamily != OperatingSystemFamilyRider.Windows)
         throw new InvalidOperationException("GetTargetFrameworkVersionWindowsMono2 is designed for Windows only");
 
-      var dir = new DirectoryInfo(@"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework");
+      var programFiles86 = Environment.GetEnvironmentVariable("PROGRAMFILES(X86)") ??
+                           Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+      if (string.IsNullOrEmpty(programFiles86))
+        programFiles86 = @"C:\Program Files (x86)";
+      var referenceAssembliesPath = Path.Combine(programFiles86, @"Reference Assemblies\Microsoft\Framework\.NETFramework");
+      var dir = new DirectoryInfo(referenceAssembliesPath);
       if (!dir.Exists)
         return new string[0];
 
@@ -69,6 +89,17 @@ namespace JetBrains.Rider.Unity.Editor
     {
       get { return EditorPrefs.GetBool("Rider_OverrideTargetFrameworkVersion", false); }
       private set { EditorPrefs.SetBool("Rider_OverrideTargetFrameworkVersion", value);; }
+    }
+    
+    public static AssemblyReloadSettings AssemblyReloadSettings
+    {
+      get
+      {
+        if (UnityUtils.UnityVersion >= new Version(2018, 2))
+          return AssemblyReloadSettings.RecompileAndContinuePlaying;
+        return (AssemblyReloadSettings) EditorPrefs.GetInt("Rider_AssemblyReloadSettings", (int) AssemblyReloadSettings.RecompileAndContinuePlaying);
+      }
+      private set { EditorPrefs.SetInt("Rider_AssemblyReloadSettings", (int) value);; }
     }
 
     private static string TargetFrameworkVersionDefault = "4.6";
@@ -226,7 +257,10 @@ namespace JetBrains.Rider.Unity.Editor
 
       if (SystemInfoRiderPlugin.operatingSystemFamily == OperatingSystemFamilyRider.Windows)
       {
-        var detectedDotnetText = GetInstalledNetFrameworks().OrderBy(v => new Version(v)).Aggregate((a, b) => a+"; "+b);
+        var detectedDotnetText = string.Empty;
+        var installedFrameworks = GetInstalledNetFrameworks();
+        if (installedFrameworks.Any())
+          detectedDotnetText = installedFrameworks.OrderBy(v => new Version(v)).Aggregate((a, b) => a+"; "+b);
         EditorGUILayout.HelpBox($"Installed dotnet versions: {detectedDotnetText}", MessageType.None);
       }
 
@@ -259,8 +293,27 @@ namespace JetBrains.Rider.Unity.Editor
           SelectedLoggingLevel);
       EditorGUILayout.HelpBox(loggingMsg, MessageType.None);
 
+      
       EditorGUI.EndChangeCheck();
 
+      if (UnityUtils.UnityVersion < new Version(2018, 2))
+      {
+        EditorGUI.BeginChangeCheck();
+        AssemblyReloadSettings= (AssemblyReloadSettings) EditorGUILayout.EnumPopup("Script Changes While Playing", AssemblyReloadSettings);
+
+        if (EditorGUI.EndChangeCheck())
+        {
+          if (AssemblyReloadSettings == AssemblyReloadSettings.RecompileAfterFinishedPlaying && EditorApplication.isPlaying)
+          {
+            EditorApplication.LockReloadAssemblies();
+          }
+          else
+          {
+            EditorApplication.UnlockReloadAssemblies();
+          }
+        }  
+      }
+      
       var githubRepo = "https://github.com/JetBrains/resharper-unity";
       var caption = $"<color=#0000FF>{githubRepo}</color>";
       LinkButton(caption: caption, url: githubRepo);

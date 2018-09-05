@@ -9,19 +9,19 @@
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;JET_MODE_ASSERT;JET_MODE_REPORT_EXCEPTIONS;RIDER</DefineConstants>
+    <DefineConstants>TRACE;JET_MODE_ASSERT;JET_MODE_REPORT_EXCEPTIONS;RIDER;$(CommandLineConstants)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;RIDER</DefineConstants>
+    <DefineConstants>TRACE;RIDER;$(CommandLineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <!-- C# -->
-    <ErrorsGen Include="Daemon\Errors\CSharpErrors.xml">
+    <ErrorsGen Include="CSharp\Daemon\Errors\CSharpErrors.xml">
       <Namespace>JetBrains.ReSharper.Plugins.Unity.CSharp.Daemon.Errors</Namespace>
-      <OutputFile>Daemon\Errors\CSharpErrors.generated.cs</OutputFile>
+      <OutputFile>CSharp\Daemon\Errors\CSharpErrors.generated.cs</OutputFile>
       <Mode>ERRORS</Mode>
     </ErrorsGen>
-    <Compile Update="Daemon\Errors\CSharpErrors.generated.cs">
+    <Compile Update="CSharp\Daemon\Errors\CSharpErrors.generated.cs">
       <DependentUpon>CSharpErrors.xml</DependentUpon>
     </Compile>
     <!-- Cg language -->
@@ -41,7 +41,7 @@
     </Compile>
     <ParserGen Include="Cg\Psi\Parsing\Cg.psi" />
     <ErrorsGen Include="Cg\Daemon\Errors\CgErrors.xml">
-      <Namespace>JetBrains.ReSharper.Cg.Daemon.Errors</Namespace>
+      <Namespace>JetBrains.ReSharper.Plugins.Unity.Cg.Daemon.Errors</Namespace>
       <OutputFile>Cg\Daemon\Errors\CgErrors.Generated.cs</OutputFile>
       <Mode>ERRORS</Mode>
     </ErrorsGen>
@@ -72,14 +72,20 @@
     <Compile Update="ShaderLab\Daemon\Errors\ShaderLabErrors.generated.cs">
       <DependentUpon>ShaderLabErrors.xml</DependentUpon>
     </Compile>
-    <Compile Remove="_Generated\**" />
-    <None Remove="_Generated\**" />
+    <!-- AsmDef/JSON "language" -->
+    <ErrorsGen Include="Json\Daemon\Errors\AsmDefErrors.xml">
+      <Namespace>JetBrains.ReSharper.Plugins.Unity.Json.Daemon.Errors</Namespace>
+      <OutputFile>Json\Daemon\Errors\AsmDefErrors.generated.cs</OutputFile>
+      <Mode>ERRORS</Mode>
+    </ErrorsGen>
+    <Compile Update="Json\Daemon\Errors\AsmDefErrors.generated.cs">
+      <DependentUpon>AsmDefErrors.xml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <!-- Resources - api.xml, icons -->
   <ItemGroup>
     <None Remove="api.xml" />
     <EmbeddedResource Include="api.xml" />
-    <EmbeddedResource Remove="_Generated\**" />
   </ItemGroup>
   <ItemGroup>
     <LiveTemplate Include="Templates\**\*.md">
@@ -89,6 +95,10 @@
     <EmbeddedResource Include="Templates\templates.generated.dotSettings">
       <LogicalName>JetBrains.ReSharper.Plugins.Unity.Templates.templates.dotSettings</LogicalName>
     </EmbeddedResource>
+  </ItemGroup>
+  <!-- TODO: remove after ClrChangeSignatureParameters stops using ListEvents -->
+  <ItemGroup Condition=" '$(OS)' == 'Unix' ">
+    <Compile Remove="CSharp\Feature\Services\QuickFixes\IncorrectMethodSignatureQuickFix.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- This requires WPF and PresentationFramework to build -->
@@ -102,7 +112,7 @@
   <!-- References -->
   <ItemGroup>
     <PackageReference Include="JetBrains.Rider.SDK" Version="$(RiderSDKVersion)" />
-    <PackageReference Include="CitizenMatt.ReSharper.LiveTemplateCompiler" Version="2.3.0" />
+    <PackageReference Include="CitizenMatt.ReSharper.LiveTemplateCompiler" Version="2.4.2" />
     <Reference Include="PresentationCore" Condition=" '$(OS)' != 'Unix' " />
     <Reference Include="PresentationFramework" Condition=" '$(OS)' != 'Unix' " />
     <Reference Include="System.Xaml" />

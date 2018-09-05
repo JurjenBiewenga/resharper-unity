@@ -297,6 +297,11 @@
             <param name="timeoutMs">Timeout to wait. -1 for infinite waiting.</param>
             <returns>'true' if Join(timeoutMs) was successful, false otherwise. Also returns 'false' if thread is already stopped or killed."></returns>
         </member>
+        <member name="F:JetBrains.Util.RdJetFunc`1.Identity">
+            <summary>
+            Identity function that always returns the same value that was used as its argument.
+            </summary>
+        </member>
         <member name="T:JetBrains.Util.Util.RName">
             <summary>
             Recursive name. For constructs like Aaaa.Bbb::CCC
@@ -611,6 +616,12 @@
               <para>Nested lifetimes are listed within the parent lifetime, but as they're terminated, the records are removed. There will be no memory leak on the parent lifetime if the nested lifetimes are terminated.</para>
             </param>
             <param name="λ">The code to execute with a temporary lifetime.</param>
+        </member>
+        <member name="T:JetBrains.DataFlow.LifetimesUnion">
+            <summary>
+            Represents a union of lifetimes that is "alive" until all <see cref="T:JetBrains.DataFlow.Lifetime"/>s of the union are terminated.
+            Exposes a common lifetime for all united lifetimes.
+            </summary>
         </member>
         <member name="T:JetBrains.DataFlow.OuterLifetime">
             <summary>

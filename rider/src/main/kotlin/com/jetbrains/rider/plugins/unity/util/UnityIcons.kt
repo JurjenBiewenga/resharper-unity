@@ -1,49 +1,61 @@
 package com.jetbrains.rider.plugins.unity.util
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.AnimatedIcon
+import com.intellij.ui.LayeredIcon
+import com.jetbrains.rider.icons.ReSharperAssemblyExplorerIcons
+import com.jetbrains.rider.icons.ReSharperCommonIcons
+import com.jetbrains.rider.icons.ReSharperProjectModelIcons
+import com.jetbrains.rider.icons.ReSharperPsiJavaScriptIcons
+import javax.swing.Icon
 
 class UnityIcons {
     class Icons {
         companion object {
             @JvmField
-            val ShaderLabFile = IconLoader.getIcon("/Icons/Shader/Shader.png")
-
             val UnityLogo = IconLoader.getIcon("/Icons/Logo/UnityLogo.png")
+        }
+    }
 
-            // TODO: Proper icons!
+    class Common {
+        companion object {
             @JvmField
-            val AttachEditorDebugConfiguration = UnityLogo
+            val UnityEditMode = IconLoader.getIcon("/Icons/common/unityEditMode.svg")
+            @JvmField
+            val UnityPlayMode = IconLoader.getIcon("/Icons/common/unityPlayMode.svg")
+        }
+    }
+
+    class FileTypes {
+        companion object {
+            @JvmField
+            val ShaderLab = IconLoader.getIcon("/Icons/fileTypes/shaderLab.svg")
 
             @JvmField
-            val AttachAndPlayEditorDebugConfiguration = UnityLogo
+            val Cg = ShaderLab
 
             @JvmField
-            val ImportantActions = UnityLogo
-
-            @JvmField
-            val EditorConnectionStatus = UnityLogo
+            val AsmDef = ReSharperPsiJavaScriptIcons.Json
         }
     }
 
     class Status{
         companion object {
             @JvmField
-            val UnityStatus = IconLoader.getIcon("/Icons/UnityStatus/unityStatus.svg")
+            val UnityStatus = IconLoader.getIcon("/Icons/status/unityStatus.svg")
             @JvmField
-            val UnityStatusPlay = IconLoader.getIcon("/Icons/UnityStatus/unityStatusPlay.svg")
+            val UnityStatusPlay = IconLoader.getIcon("/Icons/status/unityStatusPlay.svg")
 
             @JvmField
-            val UnityStatusProgress1 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusProgress1.svg")
+            val UnityStatusProgress1 = IconLoader.getIcon("/Icons/status/unityStatusProgress1.svg")
             @JvmField
-            val UnityStatusProgress2 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusProgress2.svg")
+            val UnityStatusProgress2 = IconLoader.getIcon("/Icons/status/unityStatusProgress2.svg")
             @JvmField
-            val UnityStatusProgress3 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusProgress3.svg")
+            val UnityStatusProgress3 = IconLoader.getIcon("/Icons/status/unityStatusProgress3.svg")
             @JvmField
-            val UnityStatusProgress4 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusProgress4.svg")
+            val UnityStatusProgress4 = IconLoader.getIcon("/Icons/status/unityStatusProgress4.svg")
             @JvmField
-            val UnityStatusProgress5 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusProgress5.svg")
+            val UnityStatusProgress5 = IconLoader.getIcon("/Icons/status/unityStatusProgress5.svg")
 
             val UnityStatusProgress = AnimatedIcon(150,
                 UnityStatusProgress5,
@@ -53,15 +65,15 @@ class UnityIcons {
                 UnityStatusProgress1)
 
             @JvmField
-            val UnityStatusPlayProgress1 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusPlayProgress1.svg")
+            val UnityStatusPlayProgress1 = IconLoader.getIcon("/Icons/status/unityStatusPlayProgress1.svg")
             @JvmField
-            val UnityStatusPlayProgress2 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusPlayProgress2.svg")
+            val UnityStatusPlayProgress2 = IconLoader.getIcon("/Icons/status/unityStatusPlayProgress2.svg")
             @JvmField
-            val UnityStatusPlayProgress3 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusPlayProgress3.svg")
+            val UnityStatusPlayProgress3 = IconLoader.getIcon("/Icons/status/unityStatusPlayProgress3.svg")
             @JvmField
-            val UnityStatusPlayProgress4 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusPlayProgress4.svg")
+            val UnityStatusPlayProgress4 = IconLoader.getIcon("/Icons/status/unityStatusPlayProgress4.svg")
             @JvmField
-            val UnityStatusPlayProgress5 = IconLoader.getIcon("/Icons/UnityStatus/unityStatusPlayProgress5.svg")
+            val UnityStatusPlayProgress5 = IconLoader.getIcon("/Icons/status/unityStatusPlayProgress5.svg")
 
             val UnityStatusPlayProgress = AnimatedIcon(150,
                 UnityStatusPlayProgress5,
@@ -72,17 +84,32 @@ class UnityIcons {
         }
     }
 
-    class Unity {
+    class Explorer {
         companion object {
-            @JvmField
-            val UnityEdit = IconLoader.getIcon("/Icons/_UNITY_/UnityEdit.svg")
-            @JvmField
-            val UnityPlay = IconLoader.getIcon("/Icons/_UNITY_/UnityPlay.svg")
+
+            val AssetsRoot = IconLoader.getIcon("/Icons/Explorer/UnityAssets.svg")
+            val ReferencesRoot = ReSharperCommonIcons.CompositeElement
+            val Reference = ReSharperProjectModelIcons.Assembly
+
+            // TODO: Proper icons!
+            val PackagesRoot = IconLoader.getIcon("/Icons/Explorer/FolderAssetsAlt.svg")
+            val ReadOnlyPackagesRoot = ReSharperCommonIcons.CompositeElement
+            val EmbeddedPackage = IconLoader.getIcon("/Icons/Explorer/FolderAssetsAlt.svg")
+            val LocalPackage: Icon = LayeredIcon.create(EmbeddedPackage, ReSharperProjectModelIcons.ShortcutOverlay)
+            val ReferencedPackage = EmbeddedPackage
+            val GitPackage = ReferencedPackage
+            val BuiltInPackagesRoot = ReSharperCommonIcons.CompositeElement
+            val BuiltInPackage = ReSharperProjectModelIcons.Assembly
+            val UnknownPackage = ReSharperAssemblyExplorerIcons.AssemblyBroken
+            val DependenciesRoot = ReSharperProjectModelIcons.Assemblies
+            val PackageDependency = ReSharperProjectModelIcons.AssemblyReference    // Assembly with shortcut arrow
         }
     }
 
     class Actions {
         companion object {
+            @JvmField
+            val ImportantActions = Icons.UnityLogo
             @JvmField
             val Execute = IconLoader.getIcon("/Icons/actions/execute.svg")
             @JvmField
@@ -92,25 +119,32 @@ class UnityIcons {
             @JvmField
             val Pause = IconLoader.getIcon("/Icons/actions/pause.svg")
             @JvmField
-            val SplitHorizontally = IconLoader.getIcon("/Icons/actions/splitHorizontally.svg")
-            @JvmField
-            val ToggleSoftWrap = IconLoader.getIcon("/Icons/actions/toggleSoftWrap.svg")
-            @JvmField
             val Step = IconLoader.getIcon("/Icons/actions/step.svg")
+
+            @JvmField
+            val FilterEditModeMessages = Common.UnityEditMode
+            @JvmField
+            val FilterPlayModeMessages = Common.UnityPlayMode
+
+            val OpenEditorLog = FilterEditModeMessages
+            val OpenPlayerLog = FilterPlayModeMessages
+
+            val AttachToUnity = Icons.UnityLogo
         }
     }
 
-    class General {
+    class RunConfigurations {
         companion object {
-            @JvmField
-            val Settings = IconLoader.getIcon("/Icons/general/settings.svg")
+            val AttachToUnityParentConfiguration = Icons.UnityLogo
+            val AttachAndDebug = Common.UnityEditMode
+            val AttachDebugAndPlay = Common.UnityPlayMode
         }
     }
 
     class Ide {
         companion object {
             @JvmField
-            val Settings = IconLoader.getIcon("/Icons/ide/warning.svg")
+            val Warning = IconLoader.getIcon("/Icons/ide/warning.svg")
             @JvmField
             val Info = IconLoader.getIcon("/Icons/ide/info.svg")
             @JvmField
